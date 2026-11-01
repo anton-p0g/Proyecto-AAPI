@@ -1,6 +1,14 @@
-# Proyecto-AAPI
+# Ojo en órbita
 
-EDA de EuroSAT para la asignatura Algoritmos y Arquitecturas para Procesado de Imágenes.
+Proyecto con EuroSAT RGB para la asignatura Algoritmos y Arquitecturas para Procesado de Imágenes.
+Estudiamos si un algoritmo puede descubrir usos del suelo a partir de imágenes de satélite.
+
+## Cuadernos
+
+- `Ojo_en_orbita.ipynb`: cuaderno principal para la entrega.
+- `01_preparacion_eurosat.ipynb`: preparación del subconjunto mediante filtrado con dHash
+  y muestreo de 800 imágenes por clase.
+- `EDA_EUROSAT.ipynb`: exploración inicial del dataset completo y momentos de color.
 
 ## Entorno
 
@@ -10,10 +18,17 @@ Desde la raíz del proyecto:
 uv sync --locked
 ```
 
-Abre `EDA_EUROSAT.ipynb` y selecciona `.venv/bin/python` como kernel.
 Ejecuta el notebook desde la raíz del proyecto, junto a la carpeta `data/`.
+En Google Colab, ejecuta las celdas desde el principio; no es necesario montar Drive.
 
-## Datos y rutas
+## Subconjunto del cuaderno principal
+
+El archivo `EuroSAT_RGB_800.zip` se puede descargar desde
+[OneDrive](https://upm365-my.sharepoint.com/:u:/g/personal/anton_pogromskyy_alumnos_upm_es/IQB3xUtUzff7SbiYjMNg3unqAT_LrhuWcnpjl_yJclWIbhk?e=zg6BgA&download=1).
+Contiene **8.000 imágenes RGB de 64 × 64 píxeles**, 800 por cada una de las diez clases,
+y ocupa **26,79 MiB**.
+
+## Datos y rutas del EDA inicial
 
 El EDA utiliza **EuroSAT RGB**: 27.000 imágenes JPG de 64 × 64 píxeles, con
 3 canales y 10 clases.
