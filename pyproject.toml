@@ -13,6 +13,7 @@ dependencies = [
     "pillow>=13.0.0",
     "plotly>=7.1.0",
     "rasterio>=1.5.2",
+    "scikit-image>=0.26.0",
     "scipy>=1.18.1",
     "seaborn>=0.13.2",
     "tqdm>=4.70.1",
