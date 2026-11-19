@@ -28,6 +28,19 @@ El archivo `EuroSAT_RGB_800.zip` se puede descargar desde
 Contiene **8.000 imágenes RGB de 64 × 64 píxeles**, 800 por cada una de las diez clases,
 y ocupa **26,79 MiB**.
 
+## Características precalculadas
+
+El notebook busca en `results/` los CSV de características espectrales, Haralick
+y LBP, además de los `.npy` de ResNet50 y CLIP con sus índices `.csv`. Si falta
+algún archivo, descarga el ZIP de OneDrive desde `EMBEDDINGS_URL`, en la primera
+celda de configuración. Cada sección calcula y guarda sus características si
+siguen faltando.
+
+Para compartir el notebook, sube a OneDrive la versión del ZIP que incluye los
+tres CSV de características y usa un enlace de descarga que funcione sin iniciar
+sesión. Si el enlace compartido incluye `?e=...`, añade `&download=1` al final
+para que OneDrive entregue el ZIP directamente.
+
 ## Datos y rutas del EDA inicial
 
 El EDA utiliza **EuroSAT RGB**: 27.000 imágenes JPG de 64 × 64 píxeles, con
