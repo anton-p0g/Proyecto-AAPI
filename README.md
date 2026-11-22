@@ -53,7 +53,7 @@ Para la referencia supervisada, separamos **6.400 parches de referencia y 1.600 
 | Haralick          | **0,328** |     0,276 |                  68,19 % |               68,19 % |
 | LBP               |     0,194 |     0,327 |                  69,31 % |               68,56 % |
 | Color + textura   |     0,167 |     0,340 |                  85,13 % |               84,75 % |
-| ResNet50          |     0,104 | **0,538** |              **90,69 %** |           **90,63 %** |
+| ResNet50          |     0,104 | **0,536** |              **90,69 %** |           **90,63 %** |
 | CLIP              |     0,115 |     0,450 |                  88,13 % |               87,13 % |
 
 En nuestra ejecución en **Google Colab**, IVF redujo el tiempo medio por consulta de **10,675 a 0,860 ms** con ResNet50 y de **1,520 a 0,181 ms** con CLIP. Esto supone aceleraciones de **12,41×** y **8,39×**, respectivamente. Los tiempos se midieron con consultas individuales y pueden variar según el entorno.
