@@ -2,88 +2,86 @@
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/anton-p0g/Proyecto-AAPI/blob/main/Ojo_en_orbita.ipynb)
 
+**Grupo C**
+
+- Anton Pogromskyy Mozharskyi (anton.pogromskyy@alumnos.upm.es)
+- Diego Mateo Fernández (diego.mateofer@alumnos.upm.es)
+
 Proyecto con EuroSAT RGB para la asignatura Algoritmos y Arquitecturas para Procesado de Imágenes.
 Estudiamos si un algoritmo puede descubrir usos del suelo a partir de imágenes de satélite.
 
-## Cuadernos
+## El reto
 
-- `Ojo_en_orbita.ipynb`: cuaderno principal para la entrega.
-- `01_preparacion_eurosat.ipynb`: preparación del subconjunto mediante filtrado con dHash
-  y muestreo de 800 imágenes por clase.
-- `EDA_EUROSAT.ipynb`: exploración inicial del dataset completo y momentos de color.
+¿Puede un algoritmo descubrir los usos del suelo a partir de imágenes de satélite? Para responder, comparamos distintas formas de representar cada imagen y estudiamos qué grupos aparecen cuando aplicamos k-means sin usar las etiquetas. Después usamos kNN como referencia supervisada para comprobar hasta qué punto esas mismas representaciones permiten reconocer las clases cuando disponemos de ejemplos etiquetados.
 
-## Entorno
+## Dataset y preparación
 
-Desde la raíz del proyecto:
+Trabajamos con **EuroSAT**, un conjunto de 27.000 imágenes de Sentinel-2 que recoge diez clases de uso y cobertura del suelo. Para el proyecto seleccionamos **8.000 parches RGB de 64 × 64 píxeles, 800 por clase**.
+
+Empezamos con las imágenes multiespectrales porque su georreferenciación nos permite localizar cada parche. Dentro de cada clase, filtramos imágenes con huellas visuales muy parecidas mediante dHash y seleccionamos los parches por cuotas en una cuadrícula de 200 km para conservar, en lo posible, su distribución geográfica. Después recuperamos los JPG de los mismos parches para el cuaderno principal.
+
+- [Descargar el subconjunto RGB desde OneDrive](https://upm365-my.sharepoint.com/:u:/g/personal/anton_pogromskyy_alumnos_upm_es/IQCVHas6nvyzQ5q_0426Mu43AUznmqcDQGyoeKBE_wm5yg8?e=rYR1dK&download=1) (`EuroSAT_RGB_800.zip`, **26,6 MiB**).
+- [Descargar las características precalculadas desde OneDrive](https://upm365-my.sharepoint.com/:u:/g/personal/anton_pogromskyy_alumnos_upm_es/IQCNndBnJCd1RaWCgisxMQwTAfoenZTg5pFc5_1RbkJLixM?e=THLtSs&download=1) (**51,5 MiB**).
+
+El conjunto original se distribuye con licencia MIT. [Repositorio oficial de EuroSAT](https://github.com/phelber/EuroSAT) | [Artículo de Helber y colaboradores](https://doi.org/10.1109/JSTARS.2019.2918242)
+
+## Cómo lo hicimos
+
+### A. Extracción de características
+
+Para describir el color calculamos la media, la desviación típica, la asimetría y la curtosis de los canales en RGB, HSV y Lab. Para representar la textura usamos **Haralick**, que resume cómo se relacionan las intensidades de píxeles próximos, y **LBP**, que cuenta patrones locales. Evaluamos estos tres descriptores por separado y también combinamos color y textura en un único vector. Además, extraemos los embeddings de imagen de **ResNet50** y **CLIP ViT-B/32** con sus pesos preentrenados.
+
+### B. Anotación semántica con CLIP
+
+Usamos CLIP en modo _zero-shot_. Comparamos el vector de cada imagen con los vectores de diez frases en inglés y asignamos la clase de la frase más parecida. Partimos de la plantilla `a satellite photo of ...` y probamos tanto nombres de clases como descripciones de lo que se ve desde arriba. Después revisamos las matrices de confusión y comentamos cinco fallos para entender qué descripciones ayudaban y qué clases seguían confundiéndose.
+
+| Versión de los prompts        |   Exactitud |
+| ----------------------------- | ----------: |
+| V1 con el nombre de la clase  |     41,69 % |
+| V2 con descripciones visuales |     45,62 % |
+| V2 revisada                   | **52,60 %** |
+
+### C. Agrupamiento y búsqueda con FAISS
+
+Aplicamos **k-means** con diez grupos a cada representación. Usamos la **silueta** para medir la separación relativa de los grupos y el **ARI** para comprobar cuánto coinciden con las clases oficiales, ajustando por azar. Con los embeddings de ResNet50 dibujamos un mapa t-SNE y lo coloreamos por clase y por grupo para localizar las mezclas.
+
+Para la referencia supervisada, separamos **6.400 parches de referencia y 1.600 de consulta**, manteniendo la proporción de cada clase. Predecimos por votación entre los cinco vecinos más cercanos y comparamos dos índices de FAISS. `IndexFlatL2` busca de forma exhaustiva e `IndexIVFFlat` reparte los vectores en 64 celdas y consulta las cuatro más próximas.
+
+| Descriptor        |   Silueta |       ARI | Exactitud kNN exhaustivo | Exactitud kNN con IVF |
+| ----------------- | --------: | --------: | -----------------------: | --------------------: |
+| Momentos de color |     0,170 |     0,204 |                  74,19 % |               73,56 % |
+| Haralick          | **0,328** |     0,276 |                  68,19 % |               68,19 % |
+| LBP               |     0,194 |     0,327 |                  69,31 % |               68,56 % |
+| Color + textura   |     0,167 |     0,340 |                  85,13 % |               84,75 % |
+| ResNet50          |     0,104 | **0,538** |              **90,69 %** |           **90,63 %** |
+| CLIP              |     0,115 |     0,450 |                  88,13 % |               87,13 % |
+
+En nuestra ejecución en **Google Colab**, IVF redujo el tiempo medio por consulta de **10,675 a 0,860 ms** con ResNet50 y de **1,520 a 0,181 ms** con CLIP. Esto supone aceleraciones de **12,41×** y **8,39×**, respectivamente. Los tiempos se midieron con consultas individuales y pueden variar según el entorno.
+
+## Qué descubrimos
+
+ResNet50 obtiene los grupos más parecidos a las clases oficiales y la mayor exactitud con kNN, aunque las clases solo se recuperan parcialmente mediante agrupamiento. Por ejemplo, un grupo de ResNet50 reúne **558 parches de River y 471 de Highway**. Al revisar las imágenes, vimos que ambos tipos de parche suelen mostrar una franja alargada que atraviesa el paisaje. También encontramos un grupo que mezcla **487 parches de Forest y 224 de SeaLake**, con ejemplos en los que predominan superficies visualmente uniformes. Estas mezclas muestran que un rasgo visual compartido puede unir parches que EuroSAT clasifica por separado.
+
+## Cómo reproducir los resultados
+
+### En Google Colab
+
+1. Abrimos el cuaderno principal con el botón **Open in Colab** y ejecutamos la celda inicial, que instala las dependencias de [`requirements.txt`](requirements.txt).
+2. El cuaderno descarga y descomprime los parches en `data/` y recupera las características precalculadas en `results/`. Si alguna característica sigue faltando, el apartado A la calcula y la guarda. El cuaderno del repositorio conserva las tablas y figuras de la ejecución de referencia.
+
+### En local
+
+Desde la raíz del repositorio instalamos el entorno con `uv` y Python 3.13.
 
 ```bash
 uv sync --locked
 ```
 
-Ejecuta el notebook desde la raíz del proyecto, junto a la carpeta `data/`.
-En Google Colab, ejecuta las celdas desde el principio; no es necesario montar Drive.
+## Cuadernos del repositorio
 
-## Subconjunto del cuaderno principal
-
-El archivo `EuroSAT_RGB_800.zip` se puede descargar desde
-[OneDrive](https://upm365-my.sharepoint.com/:u:/g/personal/anton_pogromskyy_alumnos_upm_es/IQB3xUtUzff7SbiYjMNg3unqAT_LrhuWcnpjl_yJclWIbhk?e=zg6BgA&download=1).
-Contiene **8.000 imágenes RGB de 64 × 64 píxeles**, 800 por cada una de las diez clases,
-y ocupa **26,79 MiB**.
-
-## Características precalculadas
-
-El notebook busca en `results/` los CSV de características espectrales, Haralick
-y LBP, además de los `.npy` de ResNet50 y CLIP con sus índices `.csv`. Si falta
-algún archivo, descarga el ZIP de OneDrive desde `EMBEDDINGS_URL`, en la primera
-celda de configuración. Cada sección calcula y guarda sus características si
-siguen faltando.
-
-Para compartir el notebook, sube a OneDrive la versión del ZIP que incluye los
-tres CSV de características y usa un enlace de descarga que funcione sin iniciar
-sesión. Si el enlace compartido incluye `?e=...`, añade `&download=1` al final
-para que OneDrive entregue el ZIP directamente.
-
-## Datos y rutas del EDA inicial
-
-El EDA utiliza **EuroSAT RGB**: 27.000 imágenes JPG de 64 × 64 píxeles, con
-3 canales y 10 clases.
-
-La estructura compartida es:
-
-```text
-data/
-├── EuroSAT_RGB/
-│   ├── AnnualCrop/
-│   ├── Forest/
-│   └── ... (una carpeta por clase, con sus JPG)
-├── EuroSAT_MS/
-└── processed/
-    └── eurosat_spectral_features.csv
-```
-
-El notebook lee directamente `data/EuroSAT_RGB/` con Pillow y NumPy, sin
-PyTorch ni descargas automáticas. Cada imagen es un array RGB `uint8` de forma
-`(64, 64, 3)`, con valores entre 0 y 255. Las etiquetas numéricas se asignan a
-las clases en orden alfabético. Las imágenes se abren conforme se necesitan,
-sin cargar todo el dataset en memoria. Para el análisis del brillo, la media
-se divide entre 255 para mantener los umbrales en [0, 1].
-
-| Clase                | Imágenes en la descarga local RGB |
-| -------------------- | --------------------------------: |
-| AnnualCrop           |                             3.000 |
-| Forest               |                             3.000 |
-| HerbaceousVegetation |                             3.000 |
-| Highway              |                             2.500 |
-| Industrial           |                             2.500 |
-| Pasture              |                             2.000 |
-| PermanentCrop        |                             2.500 |
-| Residential          |                             3.000 |
-| River                |                             2.500 |
-| SeaLake              |                             3.000 |
-| **Total**            |                        **27.000** |
-
-El CSV contiene 36 características calculadas a partir de RGB, HSV y Lab, más
-dos columnas de etiquetas (38 columnas en total). Se guarda siempre en
-`data/processed/`. Esta carpeta se crea automáticamente al guardar el CSV.
-
-Fuente: [repositorio oficial de EuroSAT](https://github.com/phelber/EuroSAT).
+| Cuaderno                                                       | Contenido                                                                    |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`Ojo_en_orbita.ipynb`](Ojo_en_orbita.ipynb)                   | Análisis principal con los apartados A, B y C y sus resultados.              |
+| [`01_preparacion_eurosat.ipynb`](01_preparacion_eurosat.ipynb) | Filtrado visual, muestreo geográfico y exportación del subconjunto RGB.      |
+| [`EDA_EUROSAT.ipynb`](EDA_EUROSAT.ipynb)                       | Exploración del conjunto RGB y de sus espacios de color.                     |
+| [`EDA_Multiespectral.ipynb`](EDA_Multiespectral.ipynb)         | Exploración de las bandas de Sentinel-2, incluido el infrarrojo cercano B08. |
