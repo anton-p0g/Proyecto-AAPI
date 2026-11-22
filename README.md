@@ -1,5 +1,7 @@
 # Ojo en órbita
 
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/anton-p0g/Proyecto-AAPI/blob/main/Ojo_en_orbita.ipynb)
+
 Proyecto con EuroSAT RGB para la asignatura Algoritmos y Arquitecturas para Procesado de Imágenes.
 Estudiamos si un algoritmo puede descubrir usos del suelo a partir de imágenes de satélite.
 
