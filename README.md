@@ -1,4 +1,4 @@
-# Ojo en órbita
+# Proyecto 3: Ojo en órbita
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/anton-p0g/Proyecto-AAPI/blob/main/Ojo_en_orbita.ipynb)
 
