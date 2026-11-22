@@ -60,7 +60,7 @@ En nuestra ejecución en **Google Colab**, IVF redujo el tiempo medio por consul
 
 ## Qué descubrimos
 
-ResNet50 obtiene los grupos más parecidos a las clases oficiales y la mayor exactitud con kNN, aunque las clases solo se recuperan parcialmente mediante agrupamiento. Por ejemplo, un grupo de ResNet50 reúne **558 parches de River y 471 de Highway**. Al revisar las imágenes, vimos que ambos tipos de parche suelen mostrar una franja alargada que atraviesa el paisaje. También encontramos un grupo que mezcla **487 parches de Forest y 224 de SeaLake**, con ejemplos en los que predominan superficies visualmente uniformes. Estas mezclas muestran que un rasgo visual compartido puede unir parches que EuroSAT clasifica por separado.
+ResNet50 obtiene los grupos más parecidos a las clases oficiales y la mayor exactitud con kNN, aunque las clases solo se recuperan parcialmente mediante agrupamiento. Por ejemplo, un grupo de ResNet50 reúne **561 parches de River y 472 de Highway**. Al revisar las imágenes, vimos que ambos tipos de parche suelen mostrar una franja alargada que atraviesa el paisaje. También encontramos un grupo que mezcla **487 parches de Forest y 224 de SeaLake**, con ejemplos en los que predominan superficies visualmente uniformes. Estas mezclas muestran que un rasgo visual compartido puede unir parches que EuroSAT clasifica por separado.
 
 ## Cómo reproducir los resultados
 
